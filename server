@@ -115,24 +115,33 @@ local function findServer()
     updateCounter()
     setStartRed() -- Update UI to scanning state
 
-    scanForBestServer() -- Execute the scan loop
+    -- >> NEW: Use task.spawn to run the scan logic concurrently
+    task.spawn(function()
+        
+        scanForBestServer() -- Execute the scan loop
 
-    -- Teleportation Decision
-    if bestServerId then
-        notify(("✅ Found Best Server: %d players! Teleporting..."):format(lowestPlayers))
-        
-        setclipboard(bestServerId) -- Copy JobId for debugging/manual entry
-        
-        -- Teleport
-        TeleportService:TeleportToPlaceInstance(placeId, bestServerId)
-        
-    else
-        notify(("🚫 Scan finished. Found no suitable server after checking %d servers."):format(scannedServers))
-    end
+        -- Teleportation Decision
+        if bestServerId then
+            notify(("✅ Found Best Server: %d players! Teleporting..."):format(lowestPlayers))
+            
+            setclipboard(bestServerId) -- Copy JobId for debugging/manual entry
+            
+            -- Teleport
+            TeleportService:TeleportToPlaceInstance(placeId, bestServerId)
+            
+        else
+            notify(("🚫 Scan finished. Found no suitable server after checking %d servers."):format(scannedServers))
+        end
 
-    running = false
-    setStartGreen()
+        running = false
+        setStartGreen()
+    end) -- End of task.spawn
 end
+
+--- Event Connections ---
+
+Start.MouseButton1Click:Connect(findServer) 
+-- ... (rest of the connections) ...
 
 --- UI Setup (Re-used from previous version) ---
 
